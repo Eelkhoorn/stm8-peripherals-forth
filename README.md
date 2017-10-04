@@ -25,5 +25,31 @@ txt dtxt will display "text to be displayed" on the oled screen.
 1234 d#	will display "1234".
 
 
+The display has 8 pages (lines) of 128x8 dots.
+Positioning is done by sending display commands:
+
+dcmd (b --)	 	send one display command
+
+dcmds b b .. b n --)	send multiple (n) display commands
+
+Display positioning commands:
+
+$B0 - $B7	Vertical position: Line 0 - line7
+
+0-$F		Horizontal position in steps of 1 dot
+
+$10 -$17	Horizontal position in steps of 16 dots
+ 
+
+
+    $B2 $13 $5 3 dcmds 
+
+will position to third line ($B2), dot 69 ($13 = 4 x 16, $5 = 5, together 69).
+
+dcmds needs the number of display commands to be sended.
+
+
+
+
 TODO prevent freezing when no display is connected.
  
