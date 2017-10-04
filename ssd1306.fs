@@ -51,7 +51,7 @@
    : dcmd ( b --) 0 $3c i2c-w ;
 
 \ multiple display commands:
-   : dcmds ( c c .. c n --)
+   : dcmds ( b b .. b n --)
 	0 do dcmd loop ;
 
 \ write n bytes:
