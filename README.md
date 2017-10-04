@@ -7,8 +7,11 @@ Forth words to drive a ssd1306 oled mini display
  Assumed i2c-address: $3C
  
  ssdi ( --) 	  initialise i2c and ssd1306-display
+ 
  cls ( --)  	  clear screen
+ 
  dtxt ( adr --)	display text compiled with $"
+ 
  d#	( n --)     display number
  
  Text has to be compiled before it can be displayed
