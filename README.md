@@ -44,7 +44,7 @@ $10 -$17	Horizontal position in steps of 16 dots
 
     $B2 $13 $5 3 dcmds 
 
-will position to third line ($B2), dot 69 ($13 = 4 x 16, $5 = 5, together 69).
+will position to third line ($B2), dot 53    ($13 = 3 x 16, $5 = 5, together 53).
 
 dcmds needs the number of display commands to be sended.
 
