@@ -30,7 +30,7 @@ Positioning is done by sending display commands:
 
 dcmd (b --)	 	send one display command
 
-dcmds b b .. b n --)	send multiple (n) display commands
+dcmds (b b .. b n --)	send multiple (n) display commands
 
 Display positioning commands:
 
