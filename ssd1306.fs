@@ -2,7 +2,7 @@
 \ font from mecrisp-stellaris 2.2.1a (GPL3) 
 \ http://mecrisp.sourceforge.net
 
-#require i2c.fs
+\ #require i2c.fs
 
 NVM
 
@@ -10,12 +10,12 @@ variable page &127 allot
 
 MARKER i2caddr
 
-$3c constant i2c-adr  
+$3c constant i2c-adr  \ 7 bit address  
 
 NVM
 
 \ display command:
-   : dcmd ( b --) 0 i2c-adr i2c-w ;
+   : dcmd ( b --) 0 i2c-adr i2c-wb ;
 
 \ multiple display commands:
    : dcmds ( b b .. b n --)
@@ -52,15 +52,15 @@ create ssd-init
  
 \ Initialise display
 : ssdi ( --)
-   i2c-init ssd-init &27 0 i2c-adr i2c-wsn ;
+   i2c-init ssd-init &27 0 i2c-adr i2c-wbf ;
 
 \ write byte in display memory:
 : wram ( b --) 
-   $40 i2c-adr i2c-w ;
+   $40 i2c-adr i2c-wb ;
 
 \ Write page:
 : wpage ( --)
-   0 $10 2 dcmds page $80 $40 i2c-adr i2c-wsn ; 
+   0 $10 2 dcmds page $80 $40 i2c-adr i2c-wbf ; 
 
 \ Write screen = 8 pages: 
 : wsc ( --)
