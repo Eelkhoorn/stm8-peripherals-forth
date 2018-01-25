@@ -23,7 +23,7 @@ NVM
 : h. BASE @ >r HEX . r> BASE ! ;
 
 
-: clck
+: time
    bf 7 0 i2c-adr i2c-lbf cr
    bf 2+ C@ $3F AND h. ."  : " bf 1+ C@ h. ."  : " bf C@ h.
 ;
