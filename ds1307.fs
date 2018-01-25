@@ -6,13 +6,13 @@ RAM
 #require MARKER
 \ #require i2c.fs
 
-$68 CONSTANT i2c-adr
-
 NVM
 
 VARIABLE bf 7 ALLOT
 
 MARKER clean
+
+$68 CONSTANT i2c-adr
 
 \ uncomment to initialise clock with day 2, 23/01/'17 13:05:00
 \ create buf $0005 , $1302 , $2301 , $17 C,
