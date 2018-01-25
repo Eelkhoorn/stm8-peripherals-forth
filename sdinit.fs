@@ -1,5 +1,10 @@
 \ Initialise spi communication with sd card
+
+RAM
+: _ ;
+
 #require MARKER
+\ #require spi.fs
 
 NVM
 variable sdb 511 allot   \ data buffer, 512 bytes 
