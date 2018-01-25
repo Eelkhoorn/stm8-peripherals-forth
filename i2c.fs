@@ -1,6 +1,7 @@
 \ Code from https://lujji.github.io/blog/bare-metal-programming-stm8/
 \ slightly adapted and ported to stm8ef
-
+RAM
+: _ ;
 #require MARKER
 
 MARKER regs
@@ -96,8 +97,6 @@ NVM
 : i2c-lbf ( buf-adr n reg-adr i2c-adr --)   \ load buffer
    i2c-sr i2c-rbf 
 ;
-
-variable bf 10 allot
 
 regs   \ clean up
 
