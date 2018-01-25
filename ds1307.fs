@@ -29,7 +29,7 @@ NVM
 ;
 
 : date 
-   bf 7 0 i2cadr i2c-lbf cr
+   bf 7 0 i2c-adr i2c-lbf cr
    bf 4 + C@ h. ."  / " bf 5 + C@ h. ."  / '" bf 6 + C@ h.
 ;
    
