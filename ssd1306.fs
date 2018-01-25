@@ -23,6 +23,9 @@
 \ will position to third line ($B2), dot 53 ($13 = 3 x 16, $5 = 5, together 53).
 \ dcmds needs the number of display commands to be send.
 
+RAM
+: _ ;
+
 #require MARKER
 \ #require i2c.fs
 
@@ -30,7 +33,7 @@ NVM
 
 variable page &127 allot
 
-MARKER i2caddr
+MARKER clean
 
 $3c constant i2c-adr  
 
@@ -219,5 +222,4 @@ decimal
 \ display number
 : d# ( n --) dup abs <# #s swap sign #> 0 
 	do dup c@ drc 1 spc 1+ loop drop ;
-
-i2caddr
+clean
