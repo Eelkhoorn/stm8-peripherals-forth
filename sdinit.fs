@@ -1,4 +1,5 @@
 \ Initialise spi communication with sd card
+\ PA3 = cs
 
 RAM
 : _ ;
