@@ -6,6 +6,9 @@
 \ 1 $34 io! sets PD4
 \ 1 iox! toggles PA1
 
+RAM
+: _ ;
+
 #require MARKER
 
 MARKER regs
