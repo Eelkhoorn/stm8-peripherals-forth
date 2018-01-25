@@ -14,9 +14,9 @@ VARIABLE bf 7 ALLOT
 
 MARKER clean
 
-\ initialise clock with day 2, 23/01/'17 13:05:00
-create buf $0005 , $1302 , $2301 , $17 C,
-buf 7 0 i2c-adr i2c-wbf
+\ uncomment to initialise clock with day 2, 23/01/'17 13:05:00
+\ create buf $0005 , $1302 , $2301 , $17 C,
+\ buf 7 0 i2c-adr i2c-wbf
 
 NVM
 
