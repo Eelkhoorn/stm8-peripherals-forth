@@ -1,5 +1,3 @@
-\ Code from https://lujji.github.io/blog/bare-metal-programming-stm8/
-\ slightly adapted and ported to stm8ef
 RAM
 : _ ;
 #require MARKER
@@ -22,7 +20,7 @@ MARKER regs
 
 NVM
 
-: i2c-init ( -- ) 
+: i2c-init ( -- )
    0 I2C_CR1 0 B!     \ Periferal disable
    1 I2C_FREQR 4 B!   \ CPU freq 16 MHz
    $A0 I2C_OARL C!    \ own address 0xA0
@@ -33,7 +31,6 @@ NVM
    1 I2C_CR1 0 B!     \ Periferal enable
    1 I2C_CR2 2 B!     \ acknoledge enable
 ;
-
 
 : i2c-start ( --)
    1 I2C_CR2 0 B!
@@ -56,13 +53,13 @@ NVM
    I2C_SR3 C@ DROP 1 I2C_CR2 2 B!
 ;
 
-: i2c-wb ( b reg-adr i2c-adr)   \ write one byte to register at i2c
+: i2c-wb ( b reg-adr i2c-adr --)   \ write one byte to register at i2c
    i2c-start 0 i2c-a i2c-w i2c-w i2c-stop
 ;
 
 \ write n bytes from buffer to reg at i2c:
-: i2c-wbf ( buf-adr n reg-adr i2c-adr --) 
-   i2c-start 0 i2c-a i2c-w 
+: i2c-wbf ( buf-adr n reg-adr i2c-adr --)
+   i2c-start 0 i2c-a i2c-w
    0 do dup i + c@ i2c-w loop i2c-stop drop
 ;
 
@@ -95,7 +92,7 @@ NVM
 ;
 
 : i2c-lbf ( buf-adr n reg-adr i2c-adr --)   \ load buffer
-   i2c-sr i2c-rbf 
+   i2c-sr i2c-rbf
 ;
 
 regs   \ clean up
