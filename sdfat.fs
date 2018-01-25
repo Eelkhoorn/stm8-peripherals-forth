@@ -1,4 +1,11 @@
 \ SPI communication with SD FAT32
+\ #require sdinit.fs
+
+NVM
+
+#require D+
+#require D=
+#require D>
 
 \ All sd variables Big Endian
 variable offh    \ Start of Logical sectors,
@@ -16,14 +23,9 @@ variable nfch
 variable lcll    \ last cluster
 variable lclh
 
-#require D+
-#require D=
-#require D>
-
 : sdwt ( -- )   \ sd-wait
    begin $FF spi $FF = until
 ;
-
 
 : sdc ( u -- )    \ sd copy to buffer
    begin $ff spi $fe = until
@@ -153,5 +155,5 @@ variable lclh
    loop 2drop
 ;
 
-ram
+RAM
 
