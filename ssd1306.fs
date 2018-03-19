@@ -1,3 +1,4 @@
+\ 1141 bytes
 \ Driver for ssd1306 oled display 128x64 over i2c
 \ font from mecrisp-stellaris 2.2.1a (GPL3) 
 \ http://mecrisp.sourceforge.net
@@ -24,29 +25,29 @@
 \ dcmds needs the number of display commands to be send.
 
 RAM
+
 : _ ;
 
 #require MARKER
 \ #require i2c.fs
 
 NVM
-
 variable page &127 allot
 
 MARKER clean
 
-$3c constant i2c-adr  
+$3c constant ssd  \ slave address
 
 NVM
 
 \ display command:
-   : dcmd ( b --) 0 i2c-adr i2c-wb ;
+   : dcmd ( b --) 0 ssd i2b ;
 
 \ multiple display commands:
    : dcmds ( b b .. b n --)
 	0 do dcmd loop ;
 
-create ssd-init
+create dia  \ display initialisation array
 \ * = vccstate dependant
  $AE C,  \ SSD1306_DISPLAYOFF
  $D5 C,  \ SSD1306_SETDISPLAYCLOCKDIV
@@ -76,23 +77,26 @@ create ssd-init
  $AF C,  \ SSD1306_DISPLAYON
  
 \ Initialise display
-: ssdi ( --)
-   i2c-init ssd-init &27 0 i2c-adr i2c-wbf ;
+: ssdi  ( --)
+   i2i dia &27 0 ssd i2wf
+;
 
 \ write byte in display memory:
-: wram ( b --) 
-   $40 i2c-adr i2c-wb ;
+: wram  ( b --) 
+   $40 ssd i2b
+;
 
 \ Write page:
-: wpage ( --)
-   0 $10 2 dcmds page $80 $40 i2c-adr i2c-wbf ; 
+: wpage  ( --)
+   0 $10 2 dcmds page $80 $40 ssd i2wf
+;
 
 \ Write screen = 8 pages: 
-: wsc ( --)
+: wsc  ( --)
    8 0 do i $B0 + dcmd wpage loop ;
 
 \ Fill screen with character
-: fscr ( b --)
+: fscr  ( b --)
    page $80 rot fill wsc ;
 
 \ Clear screen
@@ -204,22 +208,22 @@ create font   \ 5x8
 decimal
 
 \ Translates ASCII to address of bitpatterns:
-: a>bp ( c -- c-adr ) 
+: a>bp  ( c -- c-adr ) 
   &32 max &127 min  &32 - 5 * font + ;
 
 \ Display character:
-: drc ( c --)
+: drc  ( c --)
    a>bp 5 0 do dup c@ wram 1 + loop drop ;
 
 \ spaces
-: spc ( u --) 0 do 0 wram loop ;
+: spc  ( u --) 0 do 0 wram loop ;
 
 \ display text compiled with $"
-: dtxt ( adr --)
+: dtxt  ( adr --)
    count 0 do dup c@ dup &32 = if 3 spc drop 
    else drc 1 spc then 1+ loop drop ;
    
 \ display number
-: d# ( n --) dup abs <# #s swap sign #> 0 
+: d#  ( n --) dup abs <# #s swap sign #> 0 
 	do dup c@ drc 1 spc 1+ loop drop ;
 clean
