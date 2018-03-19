@@ -9,9 +9,13 @@ Thomas supplied a Makefile that gets you started in no time:
    run "make" in terminal and you are ready to go.
   
   
+i2c.fs: I2C communication
+
 ssd1306.fs: I2C oled display
 
 ds1307.fs: I2C RTC module
+
+ds3231.fs: another I2C RTC module, more accurate
 
 sdinit.fs: Initialise SD card for SPI communication
 
