@@ -13,9 +13,7 @@ i2c.fs: I2C communication
 
 ssd1306.fs: I2C oled display
 
-ds1307.fs: I2C RTC module
-
-ds3231.fs: another I2C RTC module, more accurate
+rtc.fs: I2C RealTimeClock modules
 
 sdinit.fs: Initialise SD card for SPI communication
 
