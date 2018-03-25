@@ -1,5 +1,6 @@
 \ Real time clock modules DS1307 and DS3231, I2C communication
-\ DS3231 is much more accurate and has 4kb eeprom
+\ DS3231 is much more accurate
+\ Both have a 4kb eeprom 
 \ Registers 0:6  :  BCD data for sec, min, hour, #day(1:7), date, month, year(0:99)
 
 $68 CONSTANT rtc     \ slave address clock
@@ -13,12 +14,14 @@ VARIABLE tb $19 allot
    tb 7 0 rtc i2rf
 ;
 
-: SETC  ( YY MM DD d hh mm ss)  \ Set clock reg's 6:0, BCD input
+\ Set clock reg's 6:0, BCD input
+: SETC  ( YY MM DD d hh mm ss)
    tb 7 0 DO DUP ROT SWAP C! 1+ LOOP DROP
    tb 7 0 rtc i2wf ( buf-adr n reg-adr i2c-adr --)
 ;
 
-: SCRG  ( b reg-adr --)  \ set single clock register
+  \ set single clock register
+: SCRG  ( b reg-adr --)
    rtc i2wb ( b reg-adr i2c-adr)
 ;
 
