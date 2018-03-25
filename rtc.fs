@@ -3,21 +3,21 @@
 \ Both have a 4kb eeprom 
 \ Registers 0:6  :  BCD data for sec, min, hour, #day(1:7), date, month, year(0:99)
 
-$68 CONSTANT rtc     \ slave address clock
+$68 CONSTANT rtc     \ clock slave address
 $57 CONSTANT eeprom  \ eeprom slave address
 
 NVM
 
-VARIABLE tb $19 allot
+VARIABLE bf $19 allot  \ buffer 
 
 : RDC   \ Read clock
-   tb 7 0 rtc i2rf
+   bf 7 0 rtc i2rf
 ;
 
 \ Set clock reg's 6:0, BCD input
 : SETC  ( YY MM DD d hh mm ss)
-   tb 7 0 DO DUP ROT SWAP C! 1+ LOOP DROP
-   tb 7 0 rtc i2wf ( buf-adr n reg-adr i2c-adr --)
+   bf 7 0 DO DUP ROT SWAP C! 1+ LOOP DROP
+   bf 7 0 rtc i2wf ( buf-adr n reg-adr i2c-adr --)
 ;
 
   \ set single clock register
@@ -29,12 +29,12 @@ VARIABLE tb $19 allot
 
 : time
    RDC cr
-   tb 2+ C@ $3F AND h. ."  : " tb 1+ C@ h. ."  : " tb C@ h.
+   bf 2+ C@ $3F AND h. ."  : " bf 1+ C@ h. ."  : " bf C@ h.
 ;
 
 : date
    RDC cr
-   tb 4 + C@ h. ."  / " tb 5 + C@ h. ."  / '" tb 6 + C@ h.
+   bf 4 + C@ h. ."  / " bf 5 + C@ h. ."  / '" bf 6 + C@ h.
 ;
 
 \ EEPROM words, slave address $57
