@@ -1,10 +1,10 @@
 \ Source Mecrisp-Stellaris io.fs, adapted for STM8S
 \ GPIO manipulation.
 \ Portpin naming: $port#pin#  e.g. PC3 => $23, PA0 => $00
-\ O-PP-F 1 mode! sets PA1 in fast output mode push/pull
+\ O-PP-F 1 m! sets PA1 in fast output mode push/pull
 \ $10 io. displays register settings for PB0
-\ 1 $34 io! sets PD4
-\ 1 iox! toggles PA1
+\ 1 $34 io! sets PD4_ODR
+\ 1 iox toggles PA1_ODR
 
 RAM
 : _ ;
@@ -30,7 +30,7 @@ NVM
   then
 ;  \ shift left n bits
 
-\ turn a bit position into a single-bit mask
+\ turn a bit position into a mask
 : bit ( u -- u )  1 swap lshift ;
 
 \ hexadicimal output
@@ -90,7 +90,7 @@ NVM
    dup io@ ( p f) 0= swap io! 
 ;
 
-\ display readable GPIO registers associated with a pin
+\ display GPIO registers associated with a pin
 : io. ( pin -- )  
    cr dup io-m >R ( pin)
    ." Base-addr:0x" dup io-b  dup h.
