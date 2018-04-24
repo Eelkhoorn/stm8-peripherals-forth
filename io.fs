@@ -24,13 +24,17 @@ $5000 CONSTANT GPIO-BASE
 NVM
 
 : 0<>     ( n --- f)  0 = not ;         \ not equal to zero
-: lshift  ( n --- n)  0 do $2 * loop ;  \ shift left n bits
+: lshift  ( n --- n)  dup 0= if 
+    drop else
+    0 do 2 * loop 
+  then
+;  \ shift left n bits
 
 \ turn a bit position into a single-bit mask
 : bit ( u -- u )  1 swap lshift ;
 
 \ hexadicimal output
-: hex. base @ swap hex . base ! ;
+: h. base @ swap hex . base ! ;
 
 
 \ gpio modes, see STM8S-RefManual 11.3
@@ -46,53 +50,53 @@ NVM
 \ pin =  $port#pin# e.g. $13 = PB3, $0 = PA0, $37 = PD7
 
 \ Convert pin to register address
-: io-base ( pin -- GPIO.BASE)
+: io-b ( pin -- GPIO.BASE)
    $F0 and $F / 5 * GPIO-BASE + ;
 
 \ Convert pin to pin#
 : io# ( pin -- pin#) $F and ;
 
 \ Convert pin to port name
-: io-port $F / &65 + emit ;
+: io-p $F / &65 + emit ;
 
 \ Set gpio registers 	e.g. 1 GPIO.DDR $23 io# sets DDR bit of PC3
-: io-reg!  ( f reg pin --)
-   dup io-base rot + swap io# b! 
+: io-r!  ( f reg pin --)
+   dup io-b rot + swap io# b! 
 ;
 
-\ Set pin mode   e.g. o-pp $23 mode! configures PC3 as output port push/pull
-: mode! ( mode pin --) 	
-   2dup 2dup swap 4 / GPIO.DDR rot io-reg! 
-   swap 2 / 1 and GPIO.CR1 rot io-reg!
-   swap 1 and GPIO.CR2 rot io-reg! 
+\ Set pin mode   e.g. o-pp $23 m! configures PC3 as output port push/pull
+: m! ( mode pin --) 	
+   2dup 2dup swap 4 / GPIO.DDR rot io-r! 
+   swap 2 / 1 and GPIO.CR1 rot io-r!
+   swap 1 and GPIO.CR2 rot io-r! 
 ;
 
 \ Convert pin to mask
-: io-mask ( pin -- m) io# bit ;
+: io-m ( pin -- m) io# bit ;
 
 \ Get pin value
 : io@ ( pin -- f)
-   dup io-mask swap 
-   io-base GPIO.IDR + C@ and 0<>  negate 
+   dup io-m swap 
+   io-b GPIO.IDR + C@ and 0<>  negate 
 ;
 
 \ Set pin 
 : io! ( f pin -- )
-   dup io-base GPIO.ODR + swap io# b! 
+   dup io-b GPIO.ODR + swap io# b! 
 ;
  
 \ Toggle pin
-: iox! ( pin -- )
+: iox ( pin -- )
    dup io@ ( p f) 0= swap io! 
 ;
 
 \ display readable GPIO registers associated with a pin
 : io. ( pin -- )  
-   cr dup io-mask >R ( pin)
-   ." Base-addr:0x" dup io-base  dup hex.
+   cr dup io-m >R ( pin)
+   ." Base-addr:0x" dup io-b  dup h.
    ."   PIN:" swap dup io# . 
-   ."   PORT: " dup io-port 
-   io-base ( addr-b) 
+   ."   PORT: " dup io-p 
+   io-b ( addr-b) 
    ."   ODR:" dup c@ R@ ( addrb b m) and 0<> negate . 1 +
    ."   IDR:" dup c@ R@ and 0<> negate . 1 +
    ."   DDR:" dup c@ R@ and 0<> negate . 1 +
