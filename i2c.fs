@@ -85,6 +85,7 @@ VARIABLE SAA   \ Slave address aknowledged
      CR ." Slave address not acknowledged"
      0 I2C_SR2 2 B!  \ reset AF
      0 SAA C!
+     i2p
      ELSE
      1 SAA C!
      2 sr1
@@ -152,7 +153,7 @@ VARIABLE SAA   \ Slave address aknowledged
 ;
 
 \ Scan I2C addresses
-: scan 128 0 do i dup 0 i2s i2a i2p saa c@ if cr . then loop ;
+: scan 128 0 do i dup 0 i2s i2a saa c@ if cr . i2p then loop ;
 
 \ Display I2C registers
 : drg I2C_CR1 $a 0 do cr dup dup . c@ space . 1+ loop drop ;
