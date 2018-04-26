@@ -1,14 +1,14 @@
 \ Real time clock modules DS1307 and DS3231, I2C communication
 \ DS3231 is much more accurate
-\ Both have a 4kb eeprom 
+\ Both have 4kb eeprom, 128 pages of 32 bytes
 \ Registers 0:6  :  BCD data for sec, min, hour, #day(1:7), date, month, year(0:99)
 
-$68 CONSTANT rtc     \ clock slave address
+$68 CONSTANT rtc     \ slave address clock
 $57 CONSTANT eeprom  \ eeprom slave address
 
 NVM
 
-VARIABLE bf $19 allot  \ buffer 
+VARIABLE bf $19 allot
 
 : RDC   \ Read clock
    bf 7 0 rtc i2rf
@@ -20,12 +20,15 @@ VARIABLE bf $19 allot  \ buffer
    bf 7 0 rtc i2wf ( buf-adr n reg-adr i2c-adr --)
 ;
 
-  \ set single clock register
+\ set single clock register
 : SCRG  ( b reg-adr --)
    rtc i2wb ( b reg-adr i2c-adr)
 ;
 
-: h. BASE @ >r HEX . r> BASE ! ;
+\ Hex output
+: h. ( b --)
+   BASE @ >r HEX . r> BASE ! 
+;
 
 : time
    RDC cr
@@ -39,12 +42,12 @@ VARIABLE bf $19 allot  \ buffer
 
 \ EEPROM words, slave address $57
 
-\ write n bytes from buffer to eeprom address
+\ write n bytes from buffer to eeprom
 : eew ( buf-adr n #byte #page --)
    i2s eeprom 0 i2a i2sb i2sb i2sf i2p
 ;
 
-\ load buffer with n bytes from eeprom address
+\ load buffer with n bytes from eeprom
 : eer ( buf-adr n #byte #page --)
    i2s eeprom 0 i2a i2sb i2sb i2p i2s eeprom 1 i2a i2cf
 ;
@@ -66,6 +69,11 @@ Clock registers 0:6
 4 day
 5 month
 6 year (0-99)
-
+ 
+ Together with ssd1306.fs:
+	: txt $" This text to display" ;	\ Compile text
+	' txt 3 + DUP C@ 0 8 eew			\ write compiled text in page 8 of eeprom
+	bf 20 0 8 eer						\ read 20 bytes of page 8, start at 1ste position, from eeprom
+	bf dtxt								\ display text on ssd1306
 
 
