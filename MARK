@@ -1,0 +1,18 @@
+\ Set mark in NVM.
+\ Calling the mark removes all words 
+\  defined since the mark plus the mark itself from NVM.
+
+#require ULOCKF
+#require LOCKF
+#require WIPE
+#require :NVM
+
+:NVM											\ Create headerless word
+	CREATE LAST @ 2- ,
+	DOES> @ DUP @ 'BOOT DUP >R $E + ULOCKF !  	\ name lenght field of last word
+		  R> $10 + ! LOCKF WIPE					  	\ CP in NVM			
+;RAM											\ xt remains on stack
+
+NVM
+: MARK NVM [ $CD C, , ] RAM ;
+RAM
