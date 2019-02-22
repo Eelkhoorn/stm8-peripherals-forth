@@ -4,7 +4,7 @@
 \ pin _IRQ on nRF24L01 connected to port C4
 \ pin _CE on nRF24L01 connected to port D2
 
-\ On PRX:	start rcv 
+\ On PRX:	start rcv
 \ On PTX:	start tmt
 
 #require MARK
@@ -354,7 +354,7 @@ NVM
 ;
 
 : start
-	2 0 0 nRFi
+	2 3 0 nRFi
 ;
 
 : rcv ( --)	\ start receiving
@@ -365,6 +365,11 @@ NVM
 : tmt ( --)	\ start transmitting
 	1 PTx? !
 	txtib
+;
+
+\ start communication on startup: NVM ' boot 'BOOT ! RAM
+: boot ( --)
+	start rcv
 ;
 
 WIPE
