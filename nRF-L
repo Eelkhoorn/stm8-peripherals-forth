@@ -343,7 +343,7 @@ NVM
 ;
 
 : start  ( --)
-	2 0 0 nRFi
+	2 3 0 nRFi
 ;
 
 : rcv ( --)	\ start receiving
@@ -355,6 +355,11 @@ NVM
 	1 PTx? !
 	sTX CE.L
 	txtib
+;
+
+\ start communication on startup: NVM ' boot 'BOOT ! RAM
+: boot ( --)
+	start rcv
 ;
 
 WIPE
