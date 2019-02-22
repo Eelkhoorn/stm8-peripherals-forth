@@ -1,4 +1,4 @@
-\ nRF24L01+ virtual console, dynamic payloads, enhanced shockburst
+\ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
 \ todo: restart communication after "?" abort on PRX
 \ Led connected to port B5
 \ pin _IRQ on nRF24L01 connected to port C4
