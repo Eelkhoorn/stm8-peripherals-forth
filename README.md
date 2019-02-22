@@ -19,6 +19,6 @@ sdfat.fs:   SD card FAT32 communication
 
 io.fs:      GPIO manipulation
 
-nRF         remote console with nRF24 radio's based on Richard's library
+nRF:         remote console with nRF24 radio's based on Richard's library
 
-nRF-L       the same for STM8L051
+nRF-L:       the same for STM8L051
