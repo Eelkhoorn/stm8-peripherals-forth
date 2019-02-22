@@ -1,4 +1,4 @@
-\ nRF24L01+ virtual console, dynamic payloads, enhanced shockburst
+\ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
 \ Based on Richard's nRF24 library
 \ todo: restart communication after "?" abort on PRX
 
