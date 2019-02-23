@@ -11,8 +11,7 @@
 	CREATE LAST @ 2- ,
 	DOES> @ DUP @ 'BOOT DUP >R $E + ULOCKF !  	\ name lenght field of last word
 		  R> $10 + ! LOCKF WIPE					  	\ CP in NVM			
-;RAM											\ xt remains on stack
+;NVM											\ xt remains on stack
 
-NVM
 : MARK NVM [ $CD C, , ] RAM ;
 RAM
