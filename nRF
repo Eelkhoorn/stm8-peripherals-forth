@@ -1,0 +1,378 @@
+\ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
+\ Based on Richard's nRF24 library
+\ todo: restart communication after "?" abort on PRX
+
+\ Led connected to port B5
+\ pin _IRQ on nRF24L01 connected to port C4
+\ pin _CE on nRF24L01 connected to port D2
+
+\ On PRX:	boot
+\ On PTX:	start tmt
+
+#require MARK	
+MARK NRF0		\ Mark begin of nRF24 words
+#require WIPE
+NVM
+
+VARIABLE mb 31 ALLOT	\ my buffer
+VARIABLE mbi	\ buffer index
+VARIABLE PTX?	\ Set role: 0 for remote device, 1 for console
+
+WIPE
+
+\res MCU: STM8S103
+\res export SPI_CR1 SPI_CR2 SPI_DR SPI_SR
+\res export PB_ODR PB_DDR PB_CR1
+\res export PC_ODR PC_DDR PC_CR1 PC_CR2
+\res export PD_ODR PD_DDR PD_CR1 PD_CR2
+\res export EXTI_CR1
+
+#require ]B!
+#require ]C!
+#require WIPE
+
+NVM
+
+#include hw/spi.fs
+
+
+\ timing **************************************************
+
+: sup  ( -- )			\ setup pins
+	[ 1 PB_DDR 5 ]B!	\ PB5 debug LED output
+	[ 1 PB_CR1 5 ]B!	\ set up as low-side output (PB.5 is "open drain")
+	[ $0C PD_DDR ]C!	\ Port D setup nRF24L01 outputs
+	[ $0C PD_CR1 ]C!	\ set up as push pull outputs
+	[ $0C PD_CR2 ]C!	\ fast mode outputs
+	[ $60 PC_DDR ]C! 	\ port C: setup SPI outputs
+	[ $60 PC_CR1 ]C!	\ set as push pull output
+	[ $60 PC_CR2 ]C!	\ set as fast mode outputs
+;
+
+: LOn  [ 0 PB_ODR 5 ]B! ;	\ LED on
+: LOff [ 1 PB_ODR 5 ]B! ;	\ LED off
+
+: CE.L  ( -- )				\ CE low
+	[ 0 PD_ODR 2 ]B!
+;
+
+: CE.H  ( -- )				\ CE high
+	[ 1 PD_ODR 2 ]B!
+;
+
+: CS.L  ( -- )				\ CS low
+	[ 0 PD_ODR 3 ]B!
+;
+
+: CS.H  ( -- )				\ CS high
+	[ 1 PD_ODR 3 ]B!
+;
+
+: *10us  ( n -- )  \  delay n * 10us
+	1- FOR [
+		$A62B ,    \      LD    A,#42
+		$4A  C,    \ 1$:  DEC   A
+		$26FD ,    \      JRNE  1$
+	] NEXT
+;
+
+WIPE
+
+#require ]B!
+#require ]C!
+#require WIPE
+
+\res MCU: nRF24L01
+\res export BIT5 BIT6
+\res export R.CONFIG R.SETUP_RETR R.RF_CH R.RF_SETUP
+\res export R.STATUS R.RX_ADDR_P0 R.TX_ADDR R.RX_PW_P0
+\res export R_RX_PAYLOAD W_TX_PAYLOAD
+\res export FLUSH_TX FLUSH_RX R.FEATURE R.DYNPD
+\res export R.EN_RXADDR R_RX_PL_WID
+
+NVM
+
+\ shift left n bits
+: sla  ( c n --- c)  DUP 0= IF 
+    DROP ELSE
+    0 DO 2 * LOOP 
+  THEN
+;
+
+\ talk to nRF24L01+ ***************************************
+
+: nSPI ( c -- s)
+	CS.L SPI
+;
+
+: (nrf@!)  ( c1 -- )
+	nSPI DROP
+;
+
+: nRF@1  ( c1 -- c2 )  \ fetch the contents of register c1
+	(nrf@!) 0 SPI ( c2 )
+	CS.H
+;
+
+: nRF@n  ( a1 n --- cn....c1  )  \ read n bytes from nRF24 register a1
+	SWAP (nRF@!)
+	0 DO $AA SPI LOOP
+	CS.H
+;
+
+: nRF!0s ( c1 -- s)  \ send command c1, return status
+	nSPI CS.H
+;
+
+: nRF!0  ( c1 -- )  \ send command c1
+	nRF!0s DROP
+;
+
+: nRF!1s  ( c1 c2 -- s)  \ write c1 to register c2
+	$20 OR nSPI SWAP ( s c1 ) SPI DROP
+	CS.H
+;
+
+: nRF!1  ( c1 c2 -- )  \ write c1 to register c2
+	nRF!1s DROP
+;
+
+\ lets setup nrf24L01+ how we want ************************
+
+: R@Cg  ( -- c1 )  \ fetch config reg
+	R.CONFIG  nRF@1
+;
+
+: R!Cg  ( c1 -- )  \ write C1 to config reg
+	R.CONFIG  nRF!1
+;
+
+: fRX  ( -- )
+	FLUSH_RX nRF!0
+;
+
+: fTX  ( -- )
+	FLUSH_TX nRF!0
+;
+
+: clI  ( -- )				\ clear all interrupts
+	$70  R.STATUS nRF!1		\ 0b01110000
+;
+
+: CE.HD  ( -- )				\ CE pulse to start transmission
+	CE.H   1 *10us
+;
+
+: sRX  ( -- )			\ set as a receiver
+	R@Cg 1 OR  R!Cg fRX
+;
+
+: sTX  ( -- )			\  set as a transmitter
+	R@Cg $FE AND  R!Cg fTX
+;
+
+: b>tx ( a c -- s )	\ copy n chars from a to payload register on nRF24
+	W_TX_PAYLOAD CS.H nSPI ( a n -- s ) >R
+	0 DO
+		DUP C@ SPI DROP 1+
+	LOOP CS.H
+	( a -- ) DROP R> ( -- s )
+	CE.HD CE.L
+;
+
+\ copy count c bytes from payload register on nRF24 to buffer at a
+\	return nRF24 STATUS s
+: rx>b ( a c -- s )
+	R_RX_PAYLOAD CS.H nSPI ( a n s -- ) >R
+	0 DO
+		-1 SPI OVER C! 1+
+	LOOP  CS.H
+	( -- a ) DROP R> ( -- s )
+;
+
+: rx>bd ( a -- n)	\ copy rx-fifo to buffer at a
+	R_RX_PL_WID (nRF@!) $AB SPI	SWAP OVER		\ get payload width
+	R_RX_PAYLOAD CS.H nSPI ( a n s -- ) DROP
+	0 DO
+		-1 SPI OVER C! 1+
+	LOOP  CS.H
+	( -- a ) DROP
+;
+
+\ display nRF24 registers, two columns
+: regs ( --)
+	CR ."       0    1" \ header
+	BASE @ >R HEX
+	$10 0 DO 
+		cr i DUP . nrf@1 5 .R 
+		i $10 + nrf@1 5 .R
+	LOOP
+	R> BASE !
+;
+
+: setAir ( ch pwr ar --)	\ Set channel, power (0-3), air-rate (0-2)
+	DUP IF 1- IF 8 ELSE 0 THEN 
+	ELSE DROP $20
+	THEN SWAP
+	3 AND 1 sla OR R.RF_SETUP nrf!1
+	R.RF_CH nrf!1
+;
+
+\ helper word for spa, set 5 byte pipe address
+: hspa 	( a1 a2 a3 a4 a5 p# --)
+		R.RX_ADDR_P0 + BIT5 OR (nrf@!)
+		5 0 DO SPI DROP LOOP CS.H
+;	
+
+\ set address for pipe n
+\ Pipe 0 and 1: 5 byte address, the rest: one byte.
+\ address pipe 0 and tx-address should be the
+\ same for enhanced shockburst
+: spa ( msb...lsb n --)
+	DUP 2 < IF
+		0= IF 
+			5 0 DO 4 PICK LOOP	\ dup address
+			0 hspa				\ set address pipe 0
+			6 hspa				\ set tx address
+		ELSE
+			1 hspa
+		THEN
+	ELSE
+		R.RX_ADDR_P0 + nRF!1
+	THEN
+;
+WIPE
+
+#require ]B!
+#require WIPE
+#require TIB ( = constant $0350)
+#require ACCEPT
+#require EVALUATE
+
+\res MCU: STM8S103
+\res export INT_EXTI2 EXTI_CR1 PC_CR2 PC_IDR
+
+\res MCU: nRF24L01
+\res export BIT5 BIT6 R.STATUS R.TX_ADDR
+\res export R.FEATURE R.DYNPD R.EN_RXADDR R_RX_PL_WID
+
+NVM
+
+\ time out
+: Tt ( dt t0 t1 -- f)
+	- ABS <
+;
+
+\ Receive payload, dynamic width
+: PL.Rd ( a -- n s) \ stores n bytes in buff, n = actual payload width
+	rx>bd
+    BIT6 R.STATUS nRF!1s  \  Write 1 to clear bit
+;
+
+: PL.T ( a n --s)		\ transmit n bytes payload from a
+	b>tx DROP			\ Send Loading tx buffer, drop status reply
+	[ $7208 , $500B , $FB C, ]	\ wait for PC4 IDR go low, TX_DS
+	clI
+;
+
+\ append c to mybuffer and transmit buffer if full
+: c>mb ( c --)	
+	mbi DUP @ DUP ( c a i i) &32 < IF
+		1 ROT +! mb + C!
+	ELSE ( c a i)			\ buffer full
+		mb SWAP PL.T ( c a) \ transmit buffer
+		1 SWAP ! mb C!		\ set mbi to 1, store c at index 0
+	THEN
+;
+
+: txtib ( -- ; text)	\ transmit TIB, exit on empty input
+	clI fRX sTX ce.l base @ hex
+	CR ." : Tx to " R.TX_ADDR 5 nrf@n
+	5 0 DO . LOOP base !
+	BEGIN
+		cr ." #:"
+		sTX ce.l
+		TIB $20 ACCEPT  DUP IF
+			[ 0 PC_CR2 4 ]B!	\ PC4 interrupt disable
+			PL.T
+			[ 1 PC_CR2 4 ]B!	\ PC4 interrupt enable
+			sRX CE.H
+			20 TIM				\ set time out 100 ms
+			BEGIN
+				2DUP TIM TT
+				PC_IDR C@ NOT $10 AND	\ IRQ (PC4) low
+				OR
+			UNTIL 2DROP
+			0
+		ELSE 
+			2DROP 1
+		THEN
+	UNTIL
+;
+
+
+
+\ interrupt service routine: receive message, evaluate, send reply
+: isr ( --)
+	SAVEC [ 0 PC_CR2 4 ]B!	\ PC4 interrupt disable
+	PTX? @ IF
+		BEGIN
+			mb DUP PL.Rd >R
+			type
+			$E DUP R> AND =
+		UNTIL
+		clI 			\ reset RX_DR
+	ELSE	\ PRx                          
+		mb DUP PL.Rd DROP
+		0 mbi !
+		sTX ce.l
+		[ ' c>mb ] LITERAL 'EMIT !	\ pipe output for serial to c>mb
+		EVALUATE
+		mb mbi @ DUP IF PL.T ELSE 2DROP THEN
+		[ ' TX! ] LITERAL 'EMIT !	\ reset emit vector
+		sRX CE.H					\ switch to listen mode, reset TX_DS
+	THEN clI [ 1 PC_CR2 4 ]B!		\ PC4 interrupt enable
+	IRET
+;
+
+: nRFi  ( ch pwr ar --)		\ init radio: channel, power (0-3), air-rate (0-2)
+	sup						\ set up pins
+	CS.H 0 SPIon
+	&10000 *10us			\ delay after power-on reset (spec fig. 3)
+	setair
+	$3F R.EN_RXADDR nRF!1	\ auto acknowledgement for all pipes
+	4 R.FEATURE nRF!1		\ Set EN_DPL (enable dynamic payload)
+	$3F R.DYNPD nrf!1		\ dynamic payload for all pipes
+	fRX fTX clI				\ flush registers, clear interrupts
+	$13 R.SETUP_RETR nrf!1	\ 0.5 ms AutoRetransmitDelay
+	$F 0 nrf!1				\ Power up as PRX
+	[ $9b c, ]				\ SIM, to enable EXTI_CRx setting
+	[ 1 EXTI_CR1 5 ]B!  	\ PC falling edge interrupt
+	[ $9A c, ]				\ RIM
+	NVM
+	[ ' isr ] LITERAL INT_EXTI2 !	\ set Port C int vector (0x801E)
+	RAM
+	[ 1 PC_CR2 4 ]B!		\ PC4 interrupt enable
+;
+
+: start
+	2 3 0 nRFi				\ channel 2, maximum power, 250 kbps
+;
+
+: rcv ( --)	\ start receiving
+	0 PTX? !
+	sRX CE.H fTX
+;
+
+: tmt ( --)	\ start transmitting
+	1 PTX? !
+	txtib
+;
+
+\ to start communication on startup: NVM ' boot 'BOOT ! RAM
+: boot ( --)
+	start rcv
+;
+
+WIPE
+MARK NRF1		\ Mark end of nRF24 words
