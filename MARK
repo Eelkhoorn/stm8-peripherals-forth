@@ -1,6 +1,6 @@
 \ Set mark in NVM.
-\ Calling the mark removes all words 
-\  defined since the mark plus the mark itself from NVM.
+\ Calling the mark removes from NVM all words 
+\  defined since the mark plus the mark itself.
 
 #require ULOCKF
 #require LOCKF
