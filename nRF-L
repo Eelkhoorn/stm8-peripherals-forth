@@ -1,6 +1,8 @@
 \ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
 \ Based on Richard's nRF24 library
-\ todo: restart communication after "?" abort on PRX
+
+\ Set UART baud rate to 57600 by replacing "LDW     X,#0x6803" with "LDW     X,#0x1106" in forth.asm
+\ communication is lost after "?" abort on PRX
 
 \ Led connected to port C4
 \ pin _IRQ on nRF24L01 connected to port B2
