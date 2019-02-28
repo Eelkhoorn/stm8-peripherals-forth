@@ -2,6 +2,7 @@
 \ Based on Richard's nRF24 library
 
 \ Set UART baud rate to 57600 by replacing "LDW     X,#0x6803" with "LDW     X,#0x1106" in forth.asm
+\ or by replacing literal $6803 in "cold" with $1106
 \ communication is lost after "?" abort on PRX
 
 \ Led connected to port C4
