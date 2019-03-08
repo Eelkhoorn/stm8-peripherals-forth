@@ -1,9 +1,7 @@
 \ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
 \ Based on Richard's nRF24 library
-
-\ Set UART baud rate to 57600 by replacing "LDW     X,#0x6803" with "LDW     X,#0x1106" in forth.asm
-\ or by replacing literal $6803 in "cold" with $1106
-\ communication is lost after "?" abort on PRX
+\ Set UART to 115200 baud, see remarks at the bottom.
+\ Communication is lost after "?" abort on PRX
 
 \ Led connected to port C4
 \ pin _IRQ on nRF24L01 connected to port B2
@@ -160,7 +158,7 @@ NVM
    $70  R.STATUS nRF!1     \ 0b01110000
 ;
 
-: CE.HD  ( -- )            \ set CE high and pause
+: CE.HD  ( -- )         \ set CE high and pause
    CE.H   1 *10us
 ;
 
@@ -172,26 +170,21 @@ NVM
    fTX R@Cg $FE AND R!Cg
 ;
 
-: b>nRF ( a n CMD -- s )   \ copy n chars from a to payload register on nRF24
-   CS.H nSPI ( a n -- s ) >R
+\ copy c bytes from buffer at a to TX payload and send
+: b>tx ( a c --)
+   W_TX_PAYLOAD (nrf@!)
    0 DO
       DUP C@ SPI DROP 1+
-   LOOP CS.H
-   ( a -- ) DROP R> ( -- s )
-;
-
-\ copy c bytes from buffer at a to TX payload and send, return STATUS
-: b>tx ( a c -- s )
-   W_TX_PAYLOAD b>nRF
+   LOOP CS.H DROP
    CE.HD CE.L 
 ;
 
-: rx>bd ( a -- n s)  \ copy rx-fifo to buffer at a
-   R_RX_PL_WID (nRF@!) $AB SPI   SWAP OVER      \ get payload width
-   CS.H R_RX_PAYLOAD nSPI >R
+: rx>bd ( a -- n)  \ copy rx-fifo to buffer at a, return payload width
+   R_RX_PL_WID (nRF@!) $AB SPI SWAP OVER      \ get payload width
+   CS.H R_RX_PAYLOAD nSPI DROP
    0 DO
       -1 SPI OVER C! 1+
-   LOOP  CS.H DROP R>
+   LOOP  CS.H DROP
 ;
 
 \ display nRF24 registers, two columns
@@ -256,14 +249,14 @@ NVM
    - ABS <
 ;
 
-\ Receive payload, dynamic width
+\ Receive payload, dynamic width, return payload width and status
 : PL.Rd ( a -- n s) \ stores n bytes in buff, n = actual payload width
-   rx>bd DROP
+   rx>bd
    BIT6 R.STATUS nRF!1s  \  Write 1 to clear bit
 ;
 
 : PL.T ( a n --)                 \ transmit n bytes payload from a
-   b>tx  DROP                    \ Send Loading tx buffer, drop status reply
+   b>tx                          \ Send Loading tx buffer, drop status reply
    [ $7204 , PB_IDR , $FB C, ]   \ wait for Pb2 IDR go low, TX_DS
    clI
 ;
@@ -321,26 +314,26 @@ NVM
          EVALUATE
          mb mbi @ DUP IF PL.T ELSE 2DROP THEN
          [ ' TX! ] LITERAL 'EMIT !  \ reset emit vector
-         sRX CE.H                \ switch to listen mode, reset TX_DS
-   THEN clI [ 1 EXTI_SR1 2 ]B!            \ clear interrupt flag
+         sRX CE.H                   \ switch to listen mode, reset TX_DS
+   THEN fTX [ 1 EXTI_SR1 2 ]B!      \ clear interrupt flag
    IRET
 ;
 
 : nRFi  ( ch pwr ar --)    \ init radio: channel, power (0-3), air-rate (0-2)
    sup                     \ set up pins
-   CS.H 0 SPIon   
+   CS.H 0 SPIon            \ initialise SPI 8 MHz
    &10000 *10us            \ delay after power-on reset (spec fig. 3)
    setair
    $3F R.EN_RXADDR nRF!1   \ auto acknowledgement for all pipes
    4 R.FEATURE nRF!1       \ Set EN_DPL (enable dynamic payload)
    $3F R.DYNPD nrf!1       \ dynamic payload for all pipes
    fRX fTX clI             \ flush registers, clear interrupts
-   $13 R.SETUP_RETR nrf!1  \ 0.5 ms AutoRetransmitDelay
+\   $13 R.SETUP_RETR nrf!1  \ 0.5 ms AutoRetransmitDelay
    $F 0 nrf!1              \ Power up as PRX
                            \  enable nRF24 IRQ interrupt of PB2
-   [ $9b c, ]              \ SIM, to enable EXTI_CRx setting
-   [ 1 EXTI_CR1 5 ]B!
-   [ $9A c, ]              \ RIM
+   [ $9b C, ]              \ SIM, to enable EXTI_CRx setting
+   [ 1 EXTI_CR1 5 ]B!      \ IO-Port A/B/C/D-2 falling edge interrupt
+   [ $9A C, ]              \ RIM
    NVM
    [ ' isr ] LITERAL INT_EXTI2 ! \ set Port B int vector
    RAM
@@ -348,15 +341,17 @@ NVM
 ;
 
 : start  ( --)
-   2 3 0 nRFi           \ channel 2, maximum power, 250 kbps
+   2 3 1 nRFi           \ channel 2, maximum power, 1 Mbps
 ;
 
 : rcv ( --) \ start receiving
+   0 SPIon
    0 PTX? !
    sRX CE.H ftx
 ;
 
 : tmt ( --) \ start transmitting
+   2 SPIon
    1 PTX? !
    sTX CE.L
    txtib
@@ -371,4 +366,14 @@ WIPE
 
 MARK NRF1
 
+\\
+It is all a matter of timing.
+Set baudrate to 115200 in COLD by replacing AE 11 06 with AE 08 0B
+( in my micro's I did: NVM $80B $815B ! RAM )
+Don't forget to adjust e4thcom vocation ( -b B115200)
+I get best results with 1 Mbps airrate, 0 SPIon on PRX and 2 SPIon on PTX.
+With these settings I can send a complete flash dump.
+
+For a cheap way to improve the range, see:
+https://www.instructables.com/id/Enhanced-NRF24L01/
 
