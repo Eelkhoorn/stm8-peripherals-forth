@@ -1,7 +1,7 @@
 \ nRF24L01+ remote console, dynamic payloads, enhanced shockburst
 \ Based on Richard's nRF24 library.
 \ Set UART to 115200 baud, see remarks at the bottom.
-\ todo: restart communication after "?" abort on PRX
+\ Communication is lost after "?" abort on PRX
 
 \ Led connected to port B5
 \ pin _IRQ on nRF24L01 connected to port C4
@@ -172,32 +172,22 @@ NVM
     R@Cg $FE AND  R!Cg fTX
 ;
 
-: b>tx ( a n -- s ) \ copy n chars from a to payload register on nRF24
-    W_TX_PAYLOAD CS.H nSPI ( a n -- s ) >R
-    0 DO
-        DUP C@ SPI DROP 1+
-    LOOP CS.H
-    ( a -- ) DROP R> ( -- s )
-    CE.HD CE.L
+\ copy n chars from a to payload register on nRF24
+: b>tx ( a n --)
+   W_TX_PAYLOAD (nrf@!)
+   0 DO
+      DUP C@ SPI DROP 1+
+   LOOP CS.H DROP
+   CE.HD CE.L 
 ;
 
-\ copy count c bytes from payload register on nRF24 to buffer at a
-\   return nRF24 STATUS s
-: rx>b ( a c -- s )
-    R_RX_PAYLOAD CS.H nSPI ( a n s -- ) >R
-    0 DO
-        -1 SPI OVER C! 1+
-    LOOP  CS.H
-    ( -- a ) DROP R> ( -- s )
-;
-
-: rx>bd ( a -- n)   \ copy rx-fifo to buffer at a
+: rx>bd ( a -- n)   \ copy rx-fifo to buffer at a, return payload width
     R_RX_PL_WID (nRF@!) $AB SPI SWAP OVER       \ get payload width
-    R_RX_PAYLOAD CS.H nSPI ( a n s -- ) DROP
+    R_RX_PAYLOAD CS.H nSPI DROP
     0 DO
         -1 SPI OVER C! 1+
     LOOP  CS.H
-    ( -- a ) DROP
+    DROP
 ;
 
 \ display nRF24 registers, two columns
@@ -264,14 +254,14 @@ NVM
     - ABS <
 ;
 
-\ Receive payload, dynamic width
+\ Receive payload, dynamic width, return payload width and status
 : PL.Rd ( a -- n s) \ stores n bytes in buff, n = actual payload width
     rx>bd
     BIT6 R.STATUS nRF!1s  \  Write 1 to clear bit
 ;
 
-: PL.T ( a n --s)       \ transmit n bytes payload from a
-    b>tx DROP           \ Send Loading tx buffer, drop status reply
+: PL.T ( a n -)       \ transmit n bytes payload from a
+    b>tx                \ Send Loading tx buffer, drop status reply
     [ $7208 , $500B , $FB C, ]  \ wait for PC4 IDR go low, TX_DS
     clI
 ;
