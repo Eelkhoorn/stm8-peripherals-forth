@@ -345,13 +345,11 @@ NVM
 ;
 
 : rcv ( --) \ start receiving
-   0 SPIon
    0 PTX? !
    sRX CE.H ftx
 ;
 
 : tmt ( --) \ start transmitting
-   2 SPIon
    1 PTX? !
    sTX CE.L
    txtib
@@ -371,7 +369,6 @@ It is all a matter of timing.
 Set baudrate to 115200 in COLD by replacing AE 11 06 with AE 08 0B
 ( in my micro's I did: NVM $80B $815B ! RAM )
 Don't forget to adjust e4thcom vocation ( -b B115200)
-I get best results with 1 Mbps airrate, 0 SPIon on PRX and 2 SPIon on PTX.
 With these settings I can send a complete flash dump.
 
 For a cheap way to improve the range, see:
