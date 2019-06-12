@@ -1,6 +1,6 @@
 \ ADC single scan mode for multiple (N) channels
 
-#require MARK		\ optional, to easely remove next words from flash
+#require MARK		\ optional, to easily remove next words from flash
 
 MARK adc-l
 
@@ -99,7 +99,7 @@ WIPE
 
 \\ example
 adi
-4 11 12 13 28 sadc	\ set channels 4, 11, 12, 13 and Vrefint for adc scan
+4 11 12 13 17 sadc	\ set channels 4, 11, 12, 13 and Vrefint for adc scan
 dVd Vdd ?			\ determine Vdd
 sb					\ show all digital values of selected channels
 0 Vx .				\ show voltage of first channel (=AIN4=PC4)
