@@ -6,7 +6,11 @@ Thomas supplied a Makefile that gets you started in no time:
 
    hook up a ST-link-V2 to your stm8 board, 
    run "make" in terminal and you are ready to go.
-  
+ 
+MARK:      create marker to easily remove words from flash
+
+adc-l:      ADC single scan mode for STM8L
+
 i2c.fs:     I2C communication
 
 ssd1306.fs: I2C oled display
