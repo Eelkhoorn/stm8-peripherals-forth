@@ -6,12 +6,16 @@
 \ Led connected to port B5
 \ pin _IRQ on nRF24L01 connected to port C4
 \ pin _CE on nRF24L01 connected to port D2
+\ CSN  = PD3
+\ SCK  = PC5
+\ MOSI = PC6
+\ MISO = PC7
 
 \ On PRX:   boot
 \ On PTX:   start tmt
 
 #require MARK   
-MARK NRF0       \ Mark begin of nRF24 words
+MARK NRF0       \ Mark begin of nRF24 words in flash
 #require WIPE
 NVM
 
@@ -35,9 +39,6 @@ WIPE
 NVM
 
 #include hw/spi.fs
-
-
-\ timing **************************************************
 
 : sup  ( -- )           \ setup pins
     [ 1 PB_DDR 5 ]B!    \ PB5 debug LED output
@@ -138,8 +139,6 @@ NVM
     nRF!1s DROP
 ;
 
-\ lets setup nrf24L01+ how we want ************************
-
 : R@Cg  ( -- c1 )  \ fetch config reg
     R.CONFIG  nRF@1
 ;
@@ -238,7 +237,6 @@ WIPE
 #require WIPE
 #require TIB ( = constant $0350)
 #require ACCEPT
-#require EVALUATE
 
 \res MCU: STM8S103
 \res export INT_EXTI2 EXTI_CR1 PC_CR2 PC_IDR
@@ -248,6 +246,8 @@ WIPE
 \res export R.FEATURE R.DYNPD R.EN_RXADDR R_RX_PL_WID
 
 NVM
+
+#require EVALUATE
 
 \ time out
 : Tt ( dt t0 t1 -- f)
@@ -300,8 +300,6 @@ NVM
         THEN
     UNTIL
 ;
-
-
 
 \ interrupt service routine: receive message, evaluate, send reply
 : isr ( --)
