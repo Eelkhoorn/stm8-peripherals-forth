@@ -368,8 +368,13 @@ MARK NRF1       \ Mark end of nRF24 words
 
 \\
 It is all a matter of timing.
-Set baudrate to 115200 in COLD by replacing AE 11 06 with AE 08 0B
-( in my micro's I did: NVM $80B $8153 ! RAM )
+Set baudrate to 115200. This can be achieved by replacing the line
+        LDW     X,#0x6803       ; 9600 baud
+by
+        LDW     X,#0x080B       ; 115200 baud
+in forth.asm before flashing the board.
+Or you could look for AE 11 06 in word COLD and replace it with AE 08 0B.
+( in my micro's I did: NVM $80B $8147 ! RAM )
 Don't forget to adjust e4thcom vocation ( -b B115200)
 With these settings I can send a complete flash dump.
 
