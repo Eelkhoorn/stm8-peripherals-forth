@@ -6,7 +6,10 @@
 \ Led connected to port C4
 \ pin _IRQ on nRF24L01 connected to port B2
 \ pin _CE on nRF24L01 connected to port B3
-\ pin _CSN to port B4
+\ pin _CSN connected to port B4
+\ SCK =  PB5 / pin 15
+\ MOSI = PB6 / pin 16
+\ MISO = PB6 / pin 17
 
 \ On PRX:   boot
 \ On PTX:   start tmt
