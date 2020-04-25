@@ -3,10 +3,10 @@
 \ Set UART to 115200 baud, see remarks at the bottom.
 \ Communication is lost after "?" abort on PRX
 
-\ Led connected to port C4
-\ pin _IRQ on nRF24L01 connected to port B2
-\ pin _CE on nRF24L01 connected to port B3
-\ pin _CSN connected to port B4
+\ Led connected to PC4 / pin 20
+\ pin _IRQ on nRF24L01 connected to PB2 / pin 12
+\ pin _CE on nRF24L01 connected to PB3 / pin 13
+\ pin _CSN connected to PB4 / pin 14
 \ SCK =  PB5 / pin 15
 \ MOSI = PB6 / pin 16
 \ MISO = PB6 / pin 17
