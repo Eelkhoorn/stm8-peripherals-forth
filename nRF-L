@@ -24,10 +24,6 @@ VARIABLE PTX?  \ Set role: 0 for remote device, 1 for console
 
 WIPE
 
-#include hw/spi8l.fs
-
-RAM
-
 \res MCU: STM8L051
 \res export PB_ODR PB_DDR PB_CR1 PB_CR2
 \res export PC_CR1 PC_CR2 PC_DDR PC_ODR EXTI_CR1
@@ -39,6 +35,8 @@ RAM
 #require WIPE
 
 NVM
+
+#include hw/spi8l.fs
 
 : sup  ( -- )        \ setup pins
    [ 1 PC_DDR 4 ]B!  \ PC4 debug LED output
@@ -136,8 +134,6 @@ NVM
    nRF!1s DROP
 ;
 
-\ lets setup nrf24L01+ how we want ************************
-
 : R@Cg  ( -- c1 )  \ fetch config reg
    R.CONFIG  nRF@1
 ;
@@ -233,7 +229,6 @@ NVM
 WIPE
 #require TIB
 #require ACCEPT
-#require EVALUATE
 #require ]B!
 #require WIPE
 \res MCU: nRF24L01
@@ -243,6 +238,8 @@ WIPE
 \res export INT_EXTI2 EXTI_CR1 PB_CR2 PB_IDR EXTI_SR1 PB_IDR
 
 NVM
+
+#require EVALUATE
 
 \ time out
 : Tt ( dt t0 t1 -- f)
@@ -366,8 +363,13 @@ MARK NRF1
 
 \\
 It is all a matter of timing.
-Set baudrate to 115200 in COLD by replacing AE 11 06 with AE 08 0B
-( in my micro's I did: NVM $80B $815B ! RAM )
+Set baudrate to 115200. This can be achieved by replacing the line
+        LDW     X,#0x6803       ; 9600 baud
+by
+        LDW     X,#0x080B       ; 115200 baud
+in forth.asm before flashing the board.
+Or you could look for AE 11 06 in word COLD and replace it with AE 08 0B.
+( in my micro's I did: NVM $80B $814F ! RAM )
 Don't forget to adjust e4thcom vocation ( -b B115200)
 With these settings I can send a complete flash dump.
 
