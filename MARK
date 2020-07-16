@@ -12,5 +12,5 @@
 	DOES> ULOCKF 'BOOT &12 + 6 CMOVE LOCKF COLD
 ;NVM
 
-: MARK NVM [ $CD C, , ] ; 
+: MARK NVM [ $CD C, , ] RAM ; 
 RAM
