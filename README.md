@@ -11,6 +11,8 @@ MARK:      create marker to easily remove words from flash
 
 adc-l:      ADC single scan mode for STM8L
 
+adc-dma-l   ADC in DMA mode for STM8L
+
 i2c.fs:     I2C communication
 
 ssd1306.fs: I2C oled display
