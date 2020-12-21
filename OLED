@@ -1,0 +1,163 @@
+\ Driver for ssd1306 oled display 128x64 over i2c
+
+\ ssdi ( --) initialise i2c and ssd1306-display
+\ cls ( --) clear screen
+\ dtxt ( adr --)	display text compiled with $"
+\ Text has to be compiled before it can be displayed.
+\ : txt $" text to be displayed" ;
+\ txt dtxt will display "text to be displayed" on the oled screen.
+\ d#	( n --) display number
+\ 1234 d#	will display "1234".
+
+\ The display has 8 pages (lines) of 128x8 dots. Positioning is done by sending display commands:
+\ snd (b b .. b0 n --)	send multiple (n) display commands, last byte b0 = 0 for positioning
+\																	  b0 = $40 for dots to display 
+
+\ Display positioning commands:
+\ $B0 - $B7	Vertical position: Line 0 - line7
+\ 0-$F	Horizontal position in steps of 1 dot
+\ $10 -$17	Horizontal position in steps of 16 dots
+\ $B2 $13 $5 0 4 $3c snd
+\ will position to third line ($B2), dot 53 ($13 = 3 x 16, $5 = 5, together 53).
+\ snd needs the number of display commands to be send, and the slave address.
+\ 53 2 pc will do the same. 
+
+\ API:
+\   * I2ISR array, acts as an ISR "register file"
+\     - byte 0: ER < 0 indicates error (bits 6:0 copied from I2C_SR2)
+\     - byte 1: SA slave address (0..127)
+\     - byte 2: CCOUNT number of command bytes
+\     - byte 3: TCOUNT number of bytes in write phase
+\     - byte 4: RCOUNT number of bytes in read phase
+\     - byte 5,6 : CPOINT command buffer pointer
+\     - addr 7,8 : TPOINT transmit buffer pointer
+\     - addr 9,10: Receive buffer pointer
+
+$3c CONSTANT SSD  \ slave address
+
+#require MARK
+#require DIA	\ array with display initialisation commands
+#require I2ISR	\ i2c interrupt service routine
+
+MARK Mol
+
+#require ]B?
+#require WIPE
+
+\ Temp. constants for I2ISR register access for user code
+I2ISR 2 + CONSTANT CCOUNT  \ char number of command bytes
+I2ISR 3 + CONSTANT TCOUNT  \ char number of bytes TX
+I2ISR 4 + CONSTANT RCOUNT  \ char number of bytes RX
+I2ISR 5 + CONSTANT CPOINT  \ points to command buffer 
+I2ISR 7 + CONSTANT TPOINT  \ points to TX buffer, starting with CMD/ADDR
+I2ISR 9 + CONSTANT RPOINT  \ points to RX buffr
+
+NVM
+
+VARIABLE CREG 2 AlLOT	\ command register
+VARIABLE LBF 4 ALLOT	\ letter buffer, 6 bytes
+
+\ send n (1..4) bytes to slave a
+: snd ( b .. b b n a -- )
+	>R DUP CCOUNT C!
+	0 DO CREG I + C! LOOP
+	CREG CPOINT !
+	R> I2S
+;
+
+\ send n bytes @ a to display buffer
+: sb ( a n -- )
+	TCOUNT C!
+	TPOINT !
+	$40 1 SSD snd
+; 
+
+\ Initialise display
+: ssdi  ( --)
+   i2i dia TPOINT ! &26 TCOUNT C!
+   0 1 SSD snd
+;
+
+\ Translates ASCII to address of bitpatterns:
+: a>bp  ( c -- c-adr ) 
+  &32 max &127 min  &32 - 5 * font +
+;
+
+\ Display character:
+: drc  ( c --)
+   a>bp LBF 5 CMOVE
+   LBF 6 sb
+;
+
+\ spaces, just "00" @ $4100
+: spc  ( u --)
+	$4100 SWAP sb
+;
+
+\ display a number. Beware that numbers are preceded with 1 space.
+\ To disable the preceding space: 
+\ 	NVM  $9D ' . &11 + $9D9D OVER ! 2+ C!  \ $9D = NOP
+\ 	$9D ' U. 2+ $9D9D OVER ! 2+ C! RAM 
+\ To revert to normal:
+\	NVM $77 ' . &11 + $CD89 OVER ! 2+ C!
+\ 	$77 ' U. 2 + $CD89 OVER ! 2+ C! RAM
+: d# ( n -- )
+  'EMIT @ >R [ ' drc ] LITERAL 'EMIT !
+  .
+  R> 'EMIT !
+;
+
+: dtxt
+   'EMIT @ >R [ ' drc ] LITERAL 'EMIT !
+   count 0 do dup c@ drc  1+ loop drop
+   R> 'EMIT !
+;
+
+\ position cursor
+: pc  ( column row -- )
+	$B0 + SWAP
+	16 /MOD
+	$10 +
+	0 4 SSD snd
+;
+
+\ clear screen
+: cls
+	8 0 DO $80 spc LOOP
+;
+
+WIPE
+
+\\
+
+\ display text compiled with $"
+: dtxt  ( adr --)
+   count 0 do dup c@ dup &32 = if 3 spc drop 
+   else drc 1 spc then 1+ loop drop
+;
+
+\ display number
+: d#  ( n --) dup abs <# #s swap sign #> 0 
+	do dup c@ drc 1 spc 1+ loop drop
+;
+   
+\ reset cursor
+: rc
+	SSD 0 $10 $B0 0 4 snd
+;
+
+\ clear screen
+: cls
+	8 0 DO $80 spc LOOP
+;
+
+WIPE
+
+\\
+
+: d# ( n -- )
+  'EMIT @ >R [ ' drc ] LITERAL 'EMIT !
+  .
+  R> 'EMIT !
+;
+

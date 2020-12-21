@@ -1,0 +1,9 @@
+
+\ set mark
+: [M [compile] [ here ; immediate
+
+\ return to mark
+: ]<M here - 1- c, ] ;
+
+\ until bit reset
+: ]bu 2* $7200 + , , ]<M ;

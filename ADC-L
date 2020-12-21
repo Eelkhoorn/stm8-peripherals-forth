@@ -1,0 +1,105 @@
+\ ADC single scan mode for multiple (N) channels
+
+#require MARK		\ optional, to easely remove next words from flash
+
+MARK ADC-L
+
+\res MCU: STM8L051
+\res export CLK_PCKENR2 ADC1_CR1 ADC1_CR2 ADC1_CR3
+\res export ADC1_SQR1 ADC1_SQR2 ADC1_SQR3 ADC1_SQR4
+\res export ADC1_DRH ADC1_TRIGR1
+\res export DMA1_GCSR DMA1_C0PARH DMA1_C0M0ARH DMA1_C0CR
+\res export DMA1_C0SPR DMA1_C0NDTR 
+
+#require ]B!
+#require ]C!
+#require WIPE
+
+NVM
+
+4 CONSTANT N	\ number of channels to scan
+
+\ buffer for (N + 1) adc conversions, last entry dedicated to channel 28 (=Vrefint)
+VARIABLE buff N 2* 1+ ALLOT
+VARIABLE Vdd
+
+\ show buff, 
+: sb buff N 0 do CR DUP ? 2+ LOOP DROP ;
+
+\ adc-dma initialisation
+: adi ( --)
+	[ $91 CLK_PCKENR2 ]C!	\ enable adc and dma in clock gating reg
+	[ 1 ADC1_CR1 ]C!		\ adon in ADC1_CR1
+	[ 0 ADC1_SQR1 7 ]B!		\ enable DMA in ADC1_SQR1
+	[ 7 ADC1_CR2 ]C!		\ 384 adc clock cycles for sampling
+	[ $FF ADC1_CR3 ]C!		\ 384 clock cycles for vrefint sampling
+	[ 0 DMA1_GCSR 0 ]B!		\ DMA1_GCSR, global config & status reg., global disable
+	ADC1_DRH DMA1_C0PARH !	\ write adc_dr addr to dma1 peripheral address reg.
+	buff DMA1_C0M0ARH !		\ write buff address to dma1 memory address reg.
+	[ 1 DMA1_C0CR 4 ]B!		\ DMA1_C0CR, Channel 0 config reg., set CIRC
+	[ 1 DMA1_C0CR 5 ]B!		\ DMA1_C0CR, Channel 0 config reg., set MINCDEC
+	[ $38 DMA1_C0SPR ]C!	\ DMA1_C0SPR, Channel status & priority reg.
+							\		high priority, 16 bit data size
+	[ 1 DMA1_GCSR 0 ]B!		\ DMA1_GCSR, global config & status reg., global enable
+;
+
+\ select adc channels
+: sadc ( c1 c2 .. cn --)
+	0 $534A 4 0 DO 2DUP C! 1+ LOOP 2DROP	\ reset channel selection
+	[ 1 ADC1_SQR1 4 ]B!		\ set CHSEL_VREFINT to enable scanning Vrefint
+	[ 0 DMA1_C0CR 0 ]B!		\ DMA1_C0CR, Channel 0 config reg., disable channel
+	N DUP 1+ DMA1_C0NDTR C!	\ DMA1_C0NDTR, Number of data to transfer,
+							\ 1+ to account for Vrefint
+	[ 1 DMA1_C0CR 0 ]B!		\ DMA1_C0CR, Channel 0 config reg., enable channel
+	0 DO 
+		DUP 8 < IF 1 ADC1_SQR4 ROT B!
+			ELSE 8 - DUP 8 < IF 1 ADC1_SQR3 ROT B!
+			ELSE 8 - DUP 8 < IF 1 ADC1_SQR2 ROT B!
+			ELSE 8 - 1 ADC1_SQR1 ROT B!
+		THEN THEN THEN
+	LOOP
+;
+
+: *10us  ( n -- )  \  Richard's delay word, n * 10us
+	1- FOR [
+		$A62B ,    \      LD    A,#42
+		$4A  C,    \ 1$:  DEC   A
+		$26FD ,    \      JRNE  1$
+	] NEXT
+;
+
+\ Internal reference voltage on or off, Vref channel = 28
+: vref ( f --)
+	DUP ADC1_TRIGR1 4 B!	\ (re)set bit 4 of ADC1_TRIGR1, VREFINTON
+	IF 300 *10us THEN	\ vrefint has 3 ms startup time
+;
+
+\ trigger adc: fill buff
+: tadc ( --)
+	[ 1 ADC1_CR1 1 ]B!
+	DMA1_C0SPR BEGIN DUP C@ 2 AND UNTIL 0 SWAP 1 B!
+		\ wait for dma transaction to be completed, reset bit 1
+;
+
+\ determine Vdd (mV)
+: dVd ( -- i)
+	1 vref
+	tadc
+	&1221 &4096 buff N 2* + @ */	\ Vref = 1.221V
+	Vdd !
+	0 vref
+;
+
+\ nth channel (0 - (N-1)) voltage (mV)
+: Vx ( n -- i)
+	2* buff + @ Vdd @ 4096 */
+;
+
+WIPE
+
+\\ example
+adi
+4 11 12 13 28 sadc	\ set channels 4, 11, 12, 13 and Vrefint for adc scan
+dVd Vdd ?			\ determine Vdd
+sb					\ show all digital values of selected channels
+0 Vx .				\ show voltage of first channel (=AIN4=PC4)
