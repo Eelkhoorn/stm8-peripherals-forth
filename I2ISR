@@ -1,7 +1,7 @@
 \ STM8 eForth: I2C Master ISR for the STM8 I2C peripheral        TG9541 - 201205
 \ ------------------------------------------------------------------------------
 \ This is a variant of Thomas' I2C ISR, with an extra three bytes in the I2ISR array
-\ for a command pointer and counter.
+\ for a command pointer and counter. (367 bytes)
 
 \ The I2ISR I2C ISR code acts as a driver for I2C write/read transfers
 
@@ -63,12 +63,16 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
 \ ready?, CCOUNT, TCOUNT and RCOUNT ans BUSY back to zero?
 : ry?  ( -- )
 	[M 
+	   $C6 C, I2ISR ,		\ LD A, error byte
+	   $A480 ,				\ ADD A, $80
+	   $26 C, >REL			\ JRNE IF, exit if error
 	   $C6 C, I2C_SR3 ,		\ LD A, I2C_SR3
 	   $A402 ,				\ AND A, #2, BUSY
 	   $CA C, I2ISR 2+ ,	\ LD A, CCOUNT
 	   $CA C, I2ISR 3 + ,	\ OR A, TCOUNT
 	   $CA C, I2ISR 4 + ,	\ 0R A, RCOUNT
-	   $26 C,	\ JRNE M
+	   $26 C,				\ JRNE M
+	   ] THEN [
 	]<M
 ;
 
@@ -268,5 +272,5 @@ WIPE
 
 \ busy? wait for bus inactivity
 : b?	
-	[ $7202 , I2C_SR3 , $FB C, ]
+	[M $7202 , I2C_SR3 , ]<M
 ;

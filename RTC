@@ -1,16 +1,12 @@
-\ 393 bytes
+\ 515 bytes
 \ Real time clock modules DS1307 and DS3231, I2C communication
 \ DS3231 is much more accurate
 \ Both have 4kb eeprom, 128 pages of 32 bytes
 \ Registers 0:6  :  BCD data for sec, min, hour, #day(1:7), date, month, year(0:99)
 
 MARK Mrtc
-\ #require Mi2c
+#require I2ISR
 #require WIPE
-
-NVM
-
-VARIABLE BFR $20 allot
 
 $68 CONSTANT RTC     \ slave address clock
 $57 CONSTANT EEPROM  \ eeprom slave address
@@ -24,6 +20,8 @@ I2ISR 7 + CONSTANT TPOINT  \ points to TX buffer, starting with CMD/ADDR
 I2ISR 9 + CONSTANT RPOINT  \ points to RX buffr
 
 NVM
+
+VARIABLE BFR $20 allot
 
 \ helper
 : hcl  ( a a -- )
@@ -101,6 +99,14 @@ NVM
 	2 EEPROM snd
 ;
 
+\ background task: clock on oled display
+: BGT
+	TIM 200 MOD 0= IF		\ update every second 
+		30 3 PC				\ center cursor
+		TM
+	THEN
+;
+
 WIPE
 
 \\ example
@@ -130,10 +136,3 @@ Clock registers 0:6
 	0 8 bfR 21 eer						\ read 20 bytes of page 8, start at 1ste position, from eeprom
 	bfR dtxt							\ display text on ssd1306
 
-\ background task: clock on oled display
-: BGT
-	TIM 200 MOD 0= IF		\ update every second 
-		30 3 PC				\ center cursor
-		TM
-	THEN
-;
