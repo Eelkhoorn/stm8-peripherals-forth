@@ -101,8 +101,8 @@ VARIABLE BFR $20 allot
 
 \ background task: clock on oled display
 : BGT
-	TIM 200 MOD 0= IF		\ update every second 
-		30 3 PC				\ center cursor
+	TIM &200 MOD 0= IF		\ update every second 
+		&30 3 PC				\ center cursor
 		TM
 	THEN
 ;

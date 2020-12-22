@@ -72,7 +72,7 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
 	   $CA C, I2ISR 3 + ,	\ OR A, TCOUNT
 	   $CA C, I2ISR 4 + ,	\ 0R A, RCOUNT
 	   $26 C,				\ JRNE M
-	   SWAP
+	   SWAP					\ swap branch pointers
 	]<M
 	THEN
 ;
