@@ -1,5 +1,5 @@
 STM8EF_BOARD=MINDEV
-STM8EF_VER=2.2.20
+STM8EF_VER=2.2.26
 STM8EF_BIN=stm8ef-bin.zip
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
