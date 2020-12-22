@@ -72,8 +72,9 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
 	   $CA C, I2ISR 3 + ,	\ OR A, TCOUNT
 	   $CA C, I2ISR 4 + ,	\ 0R A, RCOUNT
 	   $26 C,				\ JRNE M
-	   ] THEN [
+	   SWAP
 	]<M
+	THEN
 ;
 
 \ start the sequence by enabling interrupts and setting I2C_CR2 bit0 (START)
