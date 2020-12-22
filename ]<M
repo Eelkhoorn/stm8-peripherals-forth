@@ -1,9 +1,18 @@
+\ backward branch
 
-\ set mark
+\ push mark adress on the stack
 : [M [compile] [ here ; immediate
 
-\ return to mark
-: ]<M here - 1- c, ] ;
+\ compile relative address to mark
+: ]<M here - 1- C, ] ;
 
-\ until bit reset
-: ]bu 2* $7200 + , , ]<M ;
+\ wait until bit reset
+: ]bru 2* $7200 + , , ]<M ;
+
+\ wait until bit set
+: ]bsu 2* $7201 + , , ]<M ;
+
+\\
+
+\  wait for I2C BUSY bit reset
+: busy? [M I2C_SR3 1 ]bu ;
