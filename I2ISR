@@ -47,7 +47,6 @@ MARK Mi2c
 #require ]B!
 #require ]C!
 #require ]B?
-#require ]@
 
 \ Load Forth IF .. ELSE .. THEN with relative addressing
 #require ]B@IF
@@ -101,7 +100,7 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
     $97 C,                   \ LD XL, A
     $C6 C, I2ISR 2+ ,        \ LD A, CCOUNT
     $CA C, I2ISR 3 + ,       \ TCOUNT OR
-    $4D C,                   \ TNZ
+\    $4D C,                   \ TNZ
     $9F C,                   \ LD A, XL
     $26 C, >REL              \ JRNE, CCOUNT C@ TCOUNT C@ OR 0= IF
       $725D , I2ISR 4 + , ]  \ TNZ  RCOUNT
@@ -248,6 +247,7 @@ WIPE
 \   * ?I2E ( -- f ) check for I2C error flag
 \   * I2W ( -- ) wait until I2C sequence has ended (or aborted by error)
 
+#require ]@
 \ Check if I2C transfer is done (T/RCOUNT and BUSY all 0)
 : ?I2D ( -- f ) [ I2ISR 2+ ]@ [ I2C_SR3 1 ]B? OR 0= ;
 

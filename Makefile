@@ -17,19 +17,14 @@ load: depend
 simload: depend
 	tools/simload.sh $(STM8EF_BOARD)
 
-target: depend
-	rm -f target
-	rm -f FORTH.efr
-	ln -s out/${STM8EF_BOARD}/target target
-	ln -s out/${STM8EF_BOARD}/FORTH.efr .
-
 depend:
 	if [ ! -d "out" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
 		unzip -q -o ${STM8EF_BIN} -x out/*; \
 		unzip -q -o ${STM8EF_BIN} out/${STM8EF_BOARD}/*; \
 		rm ${STM8EF_BIN}; \
+		ln -s out/${STM8EF_BOARD}/target target; \
 	fi
 
 clean:
-	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib mcu out tools
+	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib inc mcu out tools forth.asm forth.mk README.md LICENSE.md

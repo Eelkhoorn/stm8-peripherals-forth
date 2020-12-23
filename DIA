@@ -132,3 +132,4 @@ create font   \ 5x8
   10 c, 08 c, 18 c, 10 c, 08 c, \ ~
 decimal
 
+RAM
