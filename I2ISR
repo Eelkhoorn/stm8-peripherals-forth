@@ -100,15 +100,13 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
     $97 C,                   \ LD XL, A
     $C6 C, I2ISR 2+ ,        \ LD A, CCOUNT
     $CA C, I2ISR 3 + ,       \ TCOUNT OR
-\    $4D C,                   \ TNZ
-    $9F C,                   \ LD A, XL
     $26 C, >REL              \ JRNE, CCOUNT C@ TCOUNT C@ OR 0= IF
       $725D , I2ISR 4 + , ]  \ TNZ  RCOUNT
-      JREQ [                 \ RCOUNT C@ IF
-        $4C C,               \ INC  A         ; set R flag
+       JREQ [                 \ RCOUNT C@ IF
+       $5C C,               \ INC X        ; set R flag
       THEN
     THEN
-    [ $C7 C, I2C_DR , ]      \ LD  I2C_DR,A  ; send device address
+    [ $9FC7 , I2C_DR , ]      \ LD A,XL  LD I2C_DR,A  ; send device address
   THEN
 
   \ EV6 ADDR has just been sent - trigger next steps or STOP
