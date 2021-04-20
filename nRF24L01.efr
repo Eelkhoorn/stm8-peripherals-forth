@@ -1,0 +1,55 @@
+\ Bitmasks
+  01 equ BIT0
+  02 equ BIT1
+  04 equ BIT2
+  08 equ BIT3
+  10 equ BIT4
+  20 equ BIT5
+  40 equ BIT6
+  80 equ BIT7
+
+\ nrf24L01+ registers
+  00 equ R.CONFIG
+  01 equ R.EN_AA      \  Enable ‘Auto Acknowledgment’ for pipe bit#
+  02 equ R.EN_RXADDR  \  Enabled RX address (pipe) bit#
+  03 equ R.SETUP_AW
+  04 equ R.SETUP_RETR
+  05 equ R.RF_CH
+  06 equ R.RF_SETUP
+  07 equ R.STATUS
+  08 equ R.OBSERVE_TX
+  09 equ R.RPD        \  Bit0: Received Power Detector
+
+  0A equ R.RX_ADDR_P0
+  0B equ R.RX_ADDR_P1
+  0C equ R.RX_ADDR_P2
+  0D equ R.RX_ADDR_P3
+  0E equ R.RX_ADDR_P4
+  0F equ R.RX_ADDR_P5
+
+  10 equ R.TX_ADDR
+
+  11 equ R.RX_PW_P0  \  number of bytes in RX payload in data pipe 0
+  12 equ R.RX_PW_P1
+  13 equ R.RX_PW_P2
+  14 equ R.RX_PW_P3
+  15 equ R.RX_PW_P4
+  16 equ R.RX_PW_P5
+
+  17 equ R.FIFO_STATUS
+
+  1C equ R.DYNPD  \  Enable dynamic payload length for pipe bit#
+  1D equ R.FEATURE
+
+\ nrf24L01+ commands
+  00 equ R_REGISTER
+  20 equ W_REGISTER
+  60 equ R_RX_PL_WID
+  61 equ R_RX_PAYLOAD
+  A0 equ W_TX_PAYLOAD
+  A8 equ W_ACK_PAYLOAD       \  %10101PPP, pipe PPP=0..5
+  B0 equ W_TX_PAYLOAD_NOACK  \  like W_TX_PAYLOAD but don't request ACK
+  E1 equ FLUSH_TX
+  E2 equ FLUSH_RX
+  E3 equ REUSE_TX_PL
+  FF equ NOP
