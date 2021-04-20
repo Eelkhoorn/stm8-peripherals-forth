@@ -231,9 +231,12 @@ NVM
 
 WIPE
 #require TIB
+TIB @ CONSTANT TIB
 #require ACCEPT
 #require ]B!
 #require WIPE
+#require :NVM
+
 \res MCU: nRF24L01
 \res export R.TX_ADDR R.FEATURE R.DYNPD R.SETUP_RETR R.FIFO_STATUS
 \res export R.EN_RXADDR BIT5 BIT6 R.STATUS 
@@ -298,7 +301,7 @@ NVM
 ;
 
 \ interrupt service routine: receive message, evaluate, send reply
-: isr ( --)
+:NVM ( --)
    SAVEC
    PTX? @ IF
       BEGIN
@@ -317,7 +320,7 @@ NVM
          sRX CE.H                   \ switch to listen mode, reset TX_DS
    THEN fTX [ 1 EXTI_SR1 2 ]B!      \ clear interrupt flag
    IRET
-;
+;NVM INT_EXTI2 ! \ set Port B2 int vector
 
 : nRFi  ( ch pwr ar --)    \ init radio: channel, power (0-3), air-rate (0-2)
    sup                     \ set up pins
@@ -334,14 +337,11 @@ NVM
    [ $9b C, ]              \ SIM, to enable EXTI_CRx setting
    [ 1 EXTI_CR1 5 ]B!      \ IO-Port A/B/C/D-2 falling edge interrupt
    [ $9A C, ]              \ RIM
-   NVM
-   [ ' isr ] LITERAL INT_EXTI2 ! \ set Port B int vector
-   RAM
    [ 1 PB_CR2 2 ]B!        \ PB2 interrupt enable
 ;
 
 : start  ( --)
-   2 3 1 nRFi           \ channel 2, maximum power, 1 Mbps
+   100 3 1 nRFi           \ channel 100, maximum power, 1 Mbps
 ;
 
 : rcv ( --) \ start receiving

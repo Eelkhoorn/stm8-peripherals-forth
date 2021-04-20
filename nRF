@@ -235,8 +235,10 @@ WIPE
 
 #require ]B!
 #require WIPE
-#require TIB ( = constant $0350)
+#require TIB ( used to be constant $0350)
+TIB @ CONSTANT TIB
 #require ACCEPT
+#require :NVM
 
 \res MCU: STM8S103
 \res export INT_EXTI2 EXTI_CR1 PC_CR2 PC_IDR
@@ -290,7 +292,7 @@ NVM
             sRX CE.H
             20 TIM              \ set time out 100 ms
             BEGIN
-                2DUP TIM TT
+                2DUP TIM Tt
                 PC_IDR C@ NOT $10 AND   \ IRQ (PC4) low
                 OR
             UNTIL 2DROP
@@ -302,7 +304,7 @@ NVM
 ;
 
 \ interrupt service routine: receive message, evaluate, send reply
-: isr ( --)
+:NVM ( --)
     SAVEC [ 0 PC_CR2 4 ]B!  \ PC4 interrupt disable
     PTX? @ IF
         BEGIN
@@ -322,7 +324,8 @@ NVM
         sRX CE.H                    \ switch to listen mode, reset TX_DS
     THEN fTX [ 1 PC_CR2 4 ]B!       \ PC4 interrupt enable
     IRET
-;
+;NVM INT_EXTI2 !   \ set Port C int vector (0x801E)
+
 
 : nRFi  ( ch pwr ar --)     \ init radio: channel, power (0-3), air-rate (0-2)
     sup                     \ set up pins
@@ -338,14 +341,11 @@ NVM
     [ $9b c, ]              \ SIM, to enable EXTI_CRx setting
     [ 1 EXTI_CR1 5 ]B!      \ Port C falling edge interrupt
     [ $9A c, ]              \ RIM
-    NVM
-    [ ' isr ] LITERAL INT_EXTI2 !   \ set Port C int vector (0x801E)
-    RAM
     [ 1 PC_CR2 4 ]B!        \ PC4 interrupt enable
 ;
 
 : start
-    2 3 2 nRFi              \ channel 2, maximum power, 2 Mbps
+    100 3 1 nRFi              \ channel 100, maximum power, 1 Mbps
 ;
 
 : rcv ( --) \ start receiving

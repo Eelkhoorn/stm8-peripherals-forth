@@ -55,7 +55,6 @@ MARK Mi2c
 #require ]<M
 
 NVM
-\ #require PINDEBUG
 
 VARIABLE I2ISR 9 ALLOT   \ the register file
 
@@ -78,14 +77,11 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
 
 \ start the sequence by enabling interrupts and setting I2C_CR2 bit0 (START)
 : I2S ( c -- )      \ start i2C write/read - user code sets T/RCOUNT, T/RPOINT
-\  PL
   ( c ) I2ISR !     \ reset flag (MSB), set device address (LSB)
   [ 0 I2C_CR2 1 ]B! \ clear stop bit
   [ 3 I2C_ITR ]C!   \ set ITERREN and ITEVTEN
   [ 1 I2C_CR2 0 ]B!
-\  PH
   ry?				\ wait for communication to finish
-\  PL
 ;
 
 \ I2C Master ISR headerless code
@@ -99,16 +95,14 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
     $48 C,                   \ SLL  A         ; shift left for R/W flag
     $97 C,                   \ LD XL, A
     $C6 C, I2ISR 2+ ,        \ LD A, CCOUNT
-    $CA C, I2ISR 3 + ,       \ TCOUNT OR
-\    $4D C,                   \ TNZ
-    $9F C,                   \ LD A, XL
+    $CA C, I2ISR 3 + ,       \ OR TCOUNT
     $26 C, >REL              \ JRNE, CCOUNT C@ TCOUNT C@ OR 0= IF
       $725D , I2ISR 4 + , ]  \ TNZ  RCOUNT
-      JREQ [                 \ RCOUNT C@ IF
-        $4C C,               \ INC  A         ; set R flag
+       JREQ [                \ RCOUNT C@ IF
+       $5C C,                \ INC X        ; set R flag
       THEN
     THEN
-    [ $C7 C, I2C_DR , ]      \ LD  I2C_DR,A  ; send device address
+    [ $9FC7 , I2C_DR , ]      \ LD A,XL  LD I2C_DR,A  ; send device address
   THEN
 
   \ EV6 ADDR has just been sent - trigger next steps or STOP

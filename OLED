@@ -34,14 +34,13 @@
 \     - addr 7,8 : TPOINT transmit buffer pointer
 \     - addr 9,10: Receive buffer pointer
 
+MARK Mol
+
 $3c CONSTANT SSD  \ slave address
 
 #require MARK
 #require DIA	\ array with display initialisation commands
 #require I2ISR	\ i2c interrupt service routine
-
-MARK Mol
-
 #require ]B?
 #require WIPE
 
@@ -75,13 +74,13 @@ VARIABLE LBF 4 ALLOT	\ letter buffer, 6 bytes
 
 \ Initialise display
 : ssdi  ( --)
-   i2i dia TPOINT ! &26 TCOUNT C!
+   i2i DIA TPOINT ! &26 TCOUNT C!
    0 1 SSD snd
 ;
 
 \ Translates ASCII to address of bitpatterns:
 : a>bp  ( c -- c-adr ) 
-  &32 max &127 min  &32 - 5 * font +
+  &32 MAX &127 MIN  &32 - 5 * font +
 ;
 
 \ Display character:
