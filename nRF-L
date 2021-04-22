@@ -230,11 +230,16 @@ NVM
 ;
 
 WIPE
-#require TIB
-TIB @ CONSTANT TIB
-#require ACCEPT
+
 #require ]B!
 #require WIPE
+#require BUFFER
+#require TIB
+#require >IN
+#require #TIB
+#require 'EVAL
+#require TOKEN
+#require ACCEPT
 #require :NVM
 
 \res MCU: nRF24L01
