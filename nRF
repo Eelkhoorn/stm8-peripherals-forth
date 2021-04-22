@@ -235,8 +235,12 @@ WIPE
 
 #require ]B!
 #require WIPE
-#require TIB ( used to be constant $0350)
-TIB @ CONSTANT TIB
+#require BUFFER
+#require TIB
+#require >IN
+#require #TIB
+#require 'EVAL
+#require TOKEN
 #require ACCEPT
 #require :NVM
 
