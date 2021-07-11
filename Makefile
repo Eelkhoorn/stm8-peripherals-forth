@@ -17,6 +17,11 @@ load: depend
 simload: depend
 	tools/simload.sh $(STM8EF_BOARD)
 
+flash_oled: flash 
+	tools/codeload.py serial I2ISR
+	tools/codeload.py serial DIA
+	tools/codeload.py serial OLED
+
 depend:
 	if [ ! -d "out" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
