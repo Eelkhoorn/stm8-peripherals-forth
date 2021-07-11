@@ -27,4 +27,4 @@ depend:
 	fi
 
 clean:
-	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib inc mcu out tools forth.asm forth.mk README.md LICENSE.md
+	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib inc mcu out tools forth.asm forth.mk main.c LICENSE.md
