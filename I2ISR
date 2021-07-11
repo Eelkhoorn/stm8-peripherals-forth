@@ -95,19 +95,11 @@ VARIABLE I2ISR 9 ALLOT   \ the register file
     $48 C,                   \ SLL  A         ; shift left for R/W flag
     $97 C,                   \ LD XL, A
     $C6 C, I2ISR 2+ ,        \ LD A, CCOUNT
-<<<<<<< HEAD
-    $CA C, I2ISR 3 + ,       \ OR TCOUNT
-    $26 C, >REL              \ JRNE, CCOUNT C@ TCOUNT C@ OR 0= IF
-      $725D , I2ISR 4 + , ]  \ TNZ  RCOUNT
-       JREQ [                \ RCOUNT C@ IF
-       $5C C,                \ INC X        ; set R flag
-=======
     $CA C, I2ISR 3 + ,       \ TCOUNT OR
     $26 C, >REL              \ JRNE, CCOUNT C@ TCOUNT C@ OR 0= IF
       $725D , I2ISR 4 + , ]  \ TNZ  RCOUNT
        JREQ [                 \ RCOUNT C@ IF
        $5C C,               \ INC X        ; set R flag
->>>>>>> 0363bd7... update
       THEN
     THEN
     [ $9FC7 , I2C_DR , ]      \ LD A,XL  LD I2C_DR,A  ; send device address
