@@ -1,0 +1,12 @@
+LICENSE.md
+docs/
+forth.asm
+forth.mk
+inc/
+lib/
+main.c
+mcu/
+out/
+target
+tools/
+
