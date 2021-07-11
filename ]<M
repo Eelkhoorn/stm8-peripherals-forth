@@ -1,7 +1,7 @@
 \ backward branch
 
 \ push mark adress on the stack
-: [M [compile] [ here ; immediate
+: [M POSTPONE [ here ; immediate
 
 \ compile relative address to mark
 : ]<M here - 1- C, ] ;
