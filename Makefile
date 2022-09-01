@@ -1,5 +1,5 @@
 STM8EF_BOARD=MINDEV
-STM8EF_VER=2.2.28
+STM8EF_VER=2.2.29
 STM8EF_BIN=stm8ef-bin.zip
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
@@ -16,6 +16,10 @@ load: depend
 
 simload: depend
 	tools/simload.sh $(STM8EF_BOARD)
+
+
+flash_nokia: flash
+	tools/codeload.py serial NOKIA 
 
 flash_oled: flash 
 	tools/codeload.py serial I2ISR
