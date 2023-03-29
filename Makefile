@@ -1,5 +1,5 @@
 STM8EF_BOARD=MINDEV
-STM8EF_VER=2.2.27.pre1
+STM8EF_VER=2.2.29
 STM8EF_BIN=stm8ef-bin.zip
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
@@ -17,6 +17,15 @@ load: depend
 simload: depend
 	tools/simload.sh $(STM8EF_BOARD)
 
+
+flash_nokia: flash
+	tools/codeload.py serial NOKIA 
+
+flash_oled: flash 
+	tools/codeload.py serial I2ISR
+	tools/codeload.py serial DIA
+	tools/codeload.py serial OLED
+
 depend:
 	if [ ! -d "out" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
@@ -27,4 +36,4 @@ depend:
 	fi
 
 clean:
-	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib inc mcu out tools forth.asm forth.mk README.md LICENSE.md
+	rm -rf target FORTH.efr STM8S103.efr STM8S105.efr docs lib inc mcu out tools forth.asm forth.mk main.c LICENSE.md

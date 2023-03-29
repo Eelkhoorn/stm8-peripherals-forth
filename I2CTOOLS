@@ -1,0 +1,20 @@
+: I2W ( -- )  \ wait until I2C sequence complete (or error)
+  BEGIN
+    [ I2ISR 2+ ]@ [ I2C_SR3 BUSY ]B? OR 0=  \ both T/RCOUNT 0 and BUSY 0
+    [ I2ISR    ]@ 0< OR                  \ or error detected
+  UNTIL
+;
+
+\ simple I2C bus scanner
+: scan ( -- )
+  I2I
+  127 FOR
+    I 16 MOD 15 = IF CR THEN \ show 16 addresses in a row
+    I I2S                    \ sample slave address using empty transfer
+    I2W ?I2E IF              \ wait for result, check for success or failure
+      ."  --"
+    ELSE
+      I .
+    THEN
+  NEXT
+;
